@@ -2,6 +2,9 @@
 
 set -e
 
-OCI_ARCHIVE=$(nix build)
+repo=13621/jmusicbot-docker
 
-nix run nixpkgs#skopeo -- copy --additional-tag latest "docker-archive:${OCI_ARCHIVE}" "docker://ghcr.io/${repo}"
+OCI_ARCHIVE=$(nix build --print-out-paths)
+
+nix run nixpkgs#skopeo -- --insecure-policy copy "docker-archive:${OCI_ARCHIVE}" "docker://ghcr.io/${repo}"
+nix run nixpkgs#skopeo -- --insecure-policy copy "docker-archive:${OCI_ARCHIVE}" "docker://ghcr.io/${repo}:latest"
