@@ -1,0 +1,9 @@
+services:
+  jmusicbot:
+    image: ghcr.io/13621/jmusicbot-docker
+    volumes:
+      - ./config:/config
+    restart: unless-stopped
+
+volumes:
+  config:
