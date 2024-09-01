@@ -19,4 +19,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - run: scripts/gha_build_push.sh 
         env:
-          repo: ${{ github.repository_owner }}/${{ github.repository }}
+          repo: ${{ github.repository }} # "13621/jmusicbot-docker"

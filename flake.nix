@@ -9,11 +9,13 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        dname = "jmusicbot-docker";
+        dtag = pkgs.jmusicbot.version;
       in
       {
         packages.default = pkgs.dockerTools.buildImage {
-          name = "jmusicbot-docker";
-          tag = pkgs.jmusicbot.version;
+          name = dname;
+          tag = dtag;
           config = {
             created = "now";
             Cmd = ["${pkgs.jmusicbot}/bin/JMusicBot"];
@@ -21,8 +23,14 @@
             Volumes."/config" = {};
           };
         };
-        devShells.default = pkgs.mkShell {
-          packages = [ pkgs.jmusicbot ]; 
+
+        devShells = {
+          default = pkgs.mkShell {
+            packages = [ pkgs.skopeo ];
+            shellHook = ''
+              export IMAGE_TAG="${dtag}"
+            '';
+          };
         };
       }
     );
