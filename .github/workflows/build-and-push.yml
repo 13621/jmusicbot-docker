@@ -17,6 +17,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: scripts/gha_build_push.sh 
+      - name: Build image and push to registry
+        run: scripts/gha_build_push.sh 
         env:
           repo: ${{ github.repository }} # "13621/jmusicbot-docker"

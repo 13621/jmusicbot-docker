@@ -24,13 +24,12 @@
           };
         };
 
-        devShells = {
-          default = pkgs.mkShell {
-            packages = [ pkgs.skopeo ];
-            shellHook = ''
-              export IMAGE_TAG="${dtag}"
-            '';
-          };
+        devShells.default = pkgs.mkShell {
+          packages = [ pkgs.skopeo pkgs.bash ];
+          shellHook = ''
+            echo "executing shell hook..."
+            export IMAGE_TAG="${dtag}"
+          '';
         };
       }
     );
