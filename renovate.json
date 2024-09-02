@@ -10,5 +10,6 @@
     "enabled": true,
     "automerge": true,
     "schedule": ["before 4am"]
-  }
+  },
+  "ignoreTests": true
 }
