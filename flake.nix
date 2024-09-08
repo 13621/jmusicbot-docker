@@ -11,16 +11,39 @@
         pkgs = nixpkgs.legacyPackages.${system};
         dname = "jmusicbot-docker";
         dtag = pkgs.jmusicbot.version;
+
+        jre_modules = [
+          "java.se"
+          "jdk.crypto.cryptoki"
+        ];
+        jre = (pkgs.jre_minimal.overrideAttrs {
+          buildPhase = ''
+            runHook preBuild
+
+            # further optimizations for image size https://github.com/NixOS/nixpkgs/issues/169775
+            jlink --module-path ${pkgs.jdk11}/lib/openjdk/jmods --add-modules ${pkgs.lib.concatStringsSep "," jre_modules} --no-header-files --no-man-pages --compress=2 --output $out 
+
+            runHook postBuild
+           '';
+        }).override {
+          jdk = pkgs.jdk11;
+         };
       in
       {
-        packages.default = pkgs.dockerTools.buildImage {
-          name = dname;
-          tag = dtag;
-          config = {
-            created = "now";
-            Cmd = ["${pkgs.jmusicbot}/bin/JMusicBot"];
-            WorkingDir = "/config";
-            Volumes."/config" = {};
+        packages = rec {
+          jmusicbot = (pkgs.jmusicbot.overrideAttrs {
+            meta.platforms = [ "x86_64-linux" ];
+          }).override { jre_headless = jre; };
+
+          default = pkgs.dockerTools.buildImage {
+            name = dname;
+            tag = dtag;
+            config = {
+              created = "now";
+              Cmd = ["${jmusicbot}/bin/JMusicBot"];
+              WorkingDir = "/config";
+              Volumes."/config" = {};
+            };
           };
         };
 
