@@ -21,13 +21,11 @@
             runHook preBuild
 
             # further optimizations for image size https://github.com/NixOS/nixpkgs/issues/169775
-            jlink --module-path ${pkgs.jdk11}/lib/openjdk/jmods --add-modules ${pkgs.lib.concatStringsSep "," jre_modules} --no-header-files --no-man-pages --compress=2 --output $out 
+            jlink --module-path ${pkgs.jdk11_headless}/lib/openjdk/jmods --add-modules ${pkgs.lib.concatStringsSep "," jre_modules} --no-header-files --no-man-pages --compress=2 --output $out 
 
             runHook postBuild
-           '';
-        }).override {
-          jdk = pkgs.jdk11;
-         };
+            '';
+        }).override { jdk = pkgs.jdk11_headless; };
       in
       {
         packages = rec {
@@ -35,7 +33,7 @@
             meta.platforms = [ "x86_64-linux" ];
           }).override { jre_headless = jre; };
 
-          default = pkgs.dockerTools.buildImage {
+          default = pkgs.dockerTools.buildLayeredImage {
             name = dname;
             tag = dtag;
             config = {
