@@ -1,0 +1,36 @@
+From e1afa185cc5d1ab84f815a4244257a3eea5e1fa2 Mon Sep 17 00:00:00 2001
+From: 13621 <109436855+13621@users.noreply.github.com>
+Date: Tue, 1 Oct 2024 20:45:16 +0000
+Subject: [PATCH] Update pom.xml
+
+---
+ pom.xml | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/pom.xml b/pom.xml
+index b8b350654..24bc1e942 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -45,10 +45,9 @@
+             <version>4.4.1_353</version>
+         </dependency>
+         <dependency>
+-            <groupId>com.jagrosh</groupId>
+-            <artifactId>jda-utilities</artifactId>
+-            <version>3.0.5</version>
+-            <type>pom</type>
++            <groupId>com.github.Nagami-Yukki</groupId>
++            <artifactId>JDA-Utilities</artifactId>
++            <version>1.0</version>
+         </dependency>
+ 
+         <!-- Music Dependencies -->
+@@ -60,7 +59,7 @@
+         <dependency>
+             <groupId>dev.lavalink.youtube</groupId>
+             <artifactId>common</artifactId>
+-            <version>1.5.2</version>
++            <version>1.8.2</version>
+         </dependency>
+ 	<dependency>
+ 	    <groupId>com.github.jagrosh</groupId>

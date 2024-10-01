@@ -26,12 +26,16 @@
             runHook postBuild
             '';
         }).override { jdk = pkgs.jdk11_headless; };
+
+        drvs = (import ./jmusicbot.nix) { inherit pkgs jre; };
       in
       {
         packages = rec {
           jmusicbot = (pkgs.jmusicbot.overrideAttrs {
             meta.platforms = [ "x86_64-linux" ];
           }).override { jre_headless = jre; };
+
+          jmusicbot_fixed = drvs.jmusicbot_fixed;
 
           default = pkgs.dockerTools.buildLayeredImage {
             name = dname;
