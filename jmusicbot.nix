@@ -1,31 +1,55 @@
-{ pkgs, jre, ... }:
+{ pkgs, jmusicbot-source, ... }:
 
+let
+  jre_modules = [
+    "java.se"
+    "jdk.crypto.cryptoki"
+  ];
+
+  jdk = pkgs.jdk11_headless;
+in rec
 {
-  jmusicbot_fixed = pkgs.maven.buildMavenPackage {
+  jre = (pkgs.jre_minimal.overrideAttrs {
+    buildPhase = ''
+      runHook preBuild
+            
+      # further optimizations for image size https://github.com/NixOS/nixpkgs/issues/169775
+      jlink --module-path ${jdk}/lib/openjdk/jmods --add-modules ${pkgs.lib.concatStringsSep "," jre_modules} --no-header-files --no-man-pages --compress=2 --output $out 
+
+      runHook postBuild
+    '';
+  }).override { jdk = jdk; };
+
+  jmusicbot_master = pkgs.maven.buildMavenPackage {
     pname = "JMusicBot";
     version = "master";
-
-    src = pkgs.fetchFromGitHub {
-      owner = "jagrosh";
-      repo = "MusicBot";
-      rev = "859e5c5862decf433f8face5eaca3372d7d27b22";
-      hash = "sha256-btEs6248Hr0q+n8gKXudZ2JFK9M5NwOTNI84eN8plG8=";
-    };
-
-    patches = [
-      ./e1afa185cc5d1ab84f815a4244257a3eea5e1fa2.patch # bump lavalink version and fix jda-utilities (both in pom)
-    ];
-
-    mvnHash = "sha256-VT3OLZbARyYbOiwIXKm4lXTDZZvskg4JLRdlI6qiTgo=";
+    src = jmusicbot-source;
 
     nativeBuildInputs = [ pkgs.makeWrapper ];
 
+    mvnHash = "";
+
     installPhase = ''
       mkdir -p $out/bin $out/share/jmusicbot
-      cp target/JMusicBot-Snapshot-All.jar $out/share/jmusicbot.jar # JMusicBot-Snapshot-All.jar
+      cp target/JMusicBot-Snapshot-All.jar $out/share/jmusicbot.jar
 
       makeWrapper ${jre}/bin/java $out/bin/JMusicBot \
         --add-flags "-Xmx1G -Dnogui=true -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -jar $out/share/jmusicbot.jar"
     '';
+  };
+
+  jmusicbot_fixed = pkgs.maven.buildMavenPackage {
+    # overrideAttrs does not work for some reason, so we have to do this
+    pname = jmusicbot_master.pname;
+    src = jmusicbot-source;
+    nativeBuildInputs = jmusicbot_master.nativeBuildInputs;
+    installPhase = jmusicbot_master.installPhase;
+
+    version = "master-fixed";
+    mvnHash = "sha256-VT3OLZbARyYbOiwIXKm4lXTDZZvskg4JLRdlI6qiTgo=";
+
+    patches = [
+      ./e1afa185cc5d1ab84f815a4244257a3eea5e1fa2.patch # bump lavalink version and fix jda-utilities (both in pom)
+    ];
   };
 }

@@ -1,10 +1,16 @@
 {
   description = "JMusicBot docker image";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    jmusicbot-source = {
+      url = "github:jagrosh/MusicBot";
+      flake = false;
+    };
+  };
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    { nixpkgs, flake-utils, jmusicbot-source, ... }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -12,29 +18,19 @@
         dname = "jmusicbot-docker";
         dtag = pkgs.jmusicbot.version;
 
-        jre_modules = [
-          "java.se"
-          "jdk.crypto.cryptoki"
-        ];
-        jre = (pkgs.jre_minimal.overrideAttrs {
-          buildPhase = ''
-            runHook preBuild
-
-            # further optimizations for image size https://github.com/NixOS/nixpkgs/issues/169775
-            jlink --module-path ${pkgs.jdk11_headless}/lib/openjdk/jmods --add-modules ${pkgs.lib.concatStringsSep "," jre_modules} --no-header-files --no-man-pages --compress=2 --output $out 
-
-            runHook postBuild
-            '';
-        }).override { jdk = pkgs.jdk11_headless; };
-
-        drvs = (import ./jmusicbot.nix) { inherit pkgs jre; };
+        drvs = (import ./jmusicbot.nix) { inherit pkgs jmusicbot-source; };
       in
       {
         packages = rec {
+          # jmusicbot -> package from nixpkgs. based on newest release
           jmusicbot = (pkgs.jmusicbot.overrideAttrs {
             meta.platforms = [ "x86_64-linux" ];
-          }).override { jre_headless = jre; };
+          }).override { jre_headless = drvs.jre; };
 
+          # jmusicbot_master -> newest build based on master branch (built from source)
+          jmusicbot_master = drvs.jmusicbot_master; # does not work for now, use jmusicbot_fixed until fixed upstream
+
+          # jmusicbot_fixed -> patch to enable compiling and resolve 403 errors
           jmusicbot_fixed = drvs.jmusicbot_fixed;
 
           default = pkgs.dockerTools.buildLayeredImage {
