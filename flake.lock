@@ -18,6 +18,22 @@
         "type": "github"
       }
     },
+    "jmusicbot-source": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1723483718,
+        "narHash": "sha256-btEs6248Hr0q+n8gKXudZ2JFK9M5NwOTNI84eN8plG8=",
+        "owner": "jagrosh",
+        "repo": "MusicBot",
+        "rev": "859e5c5862decf433f8face5eaca3372d7d27b22",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jagrosh",
+        "repo": "MusicBot",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1728031656,
@@ -37,6 +53,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "jmusicbot-source": "jmusicbot-source",
         "nixpkgs": "nixpkgs"
       }
     },

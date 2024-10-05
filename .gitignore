@@ -1,3 +1,5 @@
 .direnv
 .env
 result
+config.txt
+serversettings.json

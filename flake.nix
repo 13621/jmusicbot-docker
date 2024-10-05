@@ -1,41 +1,38 @@
 {
   description = "JMusicBot docker image";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    jmusicbot-source = {
+      url = "github:jagrosh/MusicBot";
+      flake = false;
+    };
+  };
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    { nixpkgs, flake-utils, jmusicbot-source, ... }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
         dname = "jmusicbot-docker";
-        dtag = pkgs.jmusicbot.version;
 
-        jre_modules = [
-          "java.se"
-          "jdk.crypto.cryptoki"
-        ];
-        jre = (pkgs.jre_minimal.overrideAttrs {
-          buildPhase = ''
-            runHook preBuild
+        drvs = (import ./jmusicbot.nix) { inherit pkgs jmusicbot-source; };
 
-            # further optimizations for image size https://github.com/NixOS/nixpkgs/issues/169775
-            jlink --module-path ${pkgs.jdk11_headless}/lib/openjdk/jmods --add-modules ${pkgs.lib.concatStringsSep "," jre_modules} --no-header-files --no-man-pages --compress=2 --output $out 
+        # jmusicbot -> package from nixpkgs. based on newest release
+        jmusicbot = (pkgs.jmusicbot.overrideAttrs {
+          meta.platforms = [ "x86_64-linux" ];
+        }).override { jre_headless = drvs.jre; };
 
-            runHook postBuild
-            '';
-        }).override { jdk = pkgs.jdk11_headless; };
+        # jmusicbot_master -> newest build based on master branch (built from source)
+        # jmusicbot_master = drvs.jmusicbot_master; # does not work for now, use jmusicbot_fixed until fixed upstream
+        jmusicbot_master = drvs.jmusicbot_fixed;
       in
       {
-        packages = rec {
-          jmusicbot = (pkgs.jmusicbot.overrideAttrs {
-            meta.platforms = [ "x86_64-linux" ];
-          }).override { jre_headless = jre; };
-
+        packages = { 
           default = pkgs.dockerTools.buildLayeredImage {
             name = dname;
-            tag = dtag;
+            tag = jmusicbot.version;
             config = {
               created = "now";
               Cmd = ["${jmusicbot}/bin/JMusicBot"];
@@ -43,13 +40,26 @@
               Volumes."/config" = {};
             };
           };
+
+          master = pkgs.dockerTools.buildLayeredImage {
+            name = dname;
+            tag = jmusicbot_master.version;
+            config = {
+              created = "now";
+              Cmd = ["${jmusicbot_master}/bin/JMusicBot"];
+              WorkingDir = "/config";
+              Volumes."/config" = {};
+            };
+          };
+
         };
 
         devShells.default = pkgs.mkShell {
           packages = [ pkgs.skopeo pkgs.bash ];
           shellHook = ''
             echo "executing shell hook..."
-            export IMAGE_TAG="${dtag}"
+            export IMAGE_TAG_NIXPKGS="${jmusicbot.version}"
+            export IMAGE_TAG_MASTER="${jmusicbot_master.version}"
           '';
         };
       }
