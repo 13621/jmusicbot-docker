@@ -7,6 +7,8 @@ let
   ];
 
   jdk = pkgs.jdk11_headless;
+
+  maven = pkgs.maven.override { jdk_headless = jdk; };
 in rec
 {
   jre = (pkgs.jre_minimal.overrideAttrs {
@@ -20,7 +22,7 @@ in rec
     '';
   }).override { jdk = jdk; };
 
-  jmusicbot_master = pkgs.maven.buildMavenPackage {
+  jmusicbot_master = maven.buildMavenPackage {
     pname = "JMusicBot";
     version = "master";
     src = jmusicbot-source;
@@ -34,11 +36,11 @@ in rec
       cp target/JMusicBot-Snapshot-All.jar $out/share/jmusicbot.jar
 
       makeWrapper ${jre}/bin/java $out/bin/JMusicBot \
-        --add-flags "-Xmx1G -Dnogui=true -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -jar $out/share/jmusicbot.jar"
+        --add-flags "-Xmx1G -Dnogui=true -Djava.awt.headless=true -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -jar $out/share/jmusicbot.jar"
     '';
   };
 
-  jmusicbot_fixed = pkgs.maven.buildMavenPackage {
+  jmusicbot_fixed = maven.buildMavenPackage {
     # overrideAttrs does not work for some reason, so we have to do this
     pname = jmusicbot_master.pname;
     src = jmusicbot-source;
