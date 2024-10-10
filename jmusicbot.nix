@@ -22,14 +22,18 @@ in rec
     '';
   }).override { jdk = jdk; };
 
-  jmusicbot_master = maven.buildMavenPackage {
+  jmusicbot = (pkgs.jmusicbot.overrideAttrs {
+      meta.platforms = [ "x86_64-linux" ];
+    }).override { jre_headless = jre; };
+
+  jmusicbot_master = pkgs.makeOverridable maven.buildMavenPackage {
     pname = "JMusicBot";
     version = "master";
     src = jmusicbot-source;
 
     nativeBuildInputs = [ pkgs.makeWrapper ];
 
-    mvnHash = "";
+    mvnHash = "sha256-VT3OLZbARyYbOiwIXKm4lXTDZZvskg4JLRdlI6qiTgo=";
 
     installPhase = ''
       mkdir -p $out/bin $out/share/jmusicbot
@@ -40,18 +44,11 @@ in rec
     '';
   };
 
-  jmusicbot_fixed = maven.buildMavenPackage {
-    # overrideAttrs does not work for some reason, so we have to do this
-    pname = jmusicbot_master.pname;
-    src = jmusicbot-source;
-    nativeBuildInputs = jmusicbot_master.nativeBuildInputs;
-    installPhase = jmusicbot_master.installPhase;
-
+  jmusicbot_fixed = jmusicbot_master.override (prev: {
     version = "master-fixed";
-    mvnHash = "sha256-VT3OLZbARyYbOiwIXKm4lXTDZZvskg4JLRdlI6qiTgo=";
 
     patches = [
       ./e1afa185cc5d1ab84f815a4244257a3eea5e1fa2.patch # bump lavalink version and fix jda-utilities (both in pom)
     ];
-  };
+  });
 }
