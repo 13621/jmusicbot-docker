@@ -1,4 +1,4 @@
-{ pkgs, jmusicbot-source, ... }:
+{ pkgs, muslpkgs, jmusicbot-source, ... }:
 
 let
   jre_modules = [
@@ -6,23 +6,23 @@ let
     "jdk.crypto.cryptoki"
   ];
 
-  jdk = pkgs.jdk11_headless;
+  jdk = muslpkgs.jdk11_headless;
 
   maven = pkgs.maven.override { jdk_headless = jdk; };
 in rec
 {
-  jre = (pkgs.jre_minimal.overrideAttrs {
+  jre = (muslpkgs.jre_minimal.overrideAttrs {
     buildPhase = ''
       runHook preBuild
             
       # further optimizations for image size https://github.com/NixOS/nixpkgs/issues/169775
-      jlink --module-path ${jdk}/lib/openjdk/jmods --add-modules ${pkgs.lib.concatStringsSep "," jre_modules} --no-header-files --no-man-pages --compress=2 --output $out 
+      jlink --module-path ${jdk}/lib/openjdk/jmods --add-modules ${muslpkgs.lib.concatStringsSep "," jre_modules} --no-header-files --no-man-pages --compress=2 --output $out 
 
       runHook postBuild
     '';
   }).override { jdk = jdk; };
 
-  jmusicbot = (pkgs.jmusicbot.overrideAttrs {
+  jmusicbot = (muslpkgs.jmusicbot.overrideAttrs {
       meta.platforms = [ "x86_64-linux" ];
     }).override { jre_headless = jre; };
 
@@ -30,8 +30,9 @@ in rec
     pname = "JMusicBot";
     version = "master";
     src = jmusicbot-source;
+    mvnJdk = jdk;
 
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ muslpkgs.makeWrapper ];
 
     mvnHash = "sha256-VT3OLZbARyYbOiwIXKm4lXTDZZvskg4JLRdlI6qiTgo=";
 

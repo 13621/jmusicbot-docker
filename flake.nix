@@ -17,7 +17,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         dname = "jmusicbot-docker";
 
-        drvs = (import ./jmusicbot.nix) { pkgs = pkgs.pkgsMusl; jmusicbot-source = jmusicbot-source; };
+        drvs = (import ./jmusicbot.nix) { pkgs = pkgs; muslpkgs = pkgs.pkgsMusl; jmusicbot-source = jmusicbot-source; };
 
         # jmusicbot -> package from nixpkgs. based on newest release
         jmusicbot = drvs.jmusicbot;
@@ -41,7 +41,11 @@
 
           master = default.override (prev: {
             tag = jmusicbot_master.version;
-            config.Cmd = [ "${jmusicbot_master}/bin/JMusicBot" ];
+            config = {
+              Cmd = [ "${jmusicbot}/bin/JMusicBot" ];
+              WorkingDir = "/config";
+              Volumes."/config" = {};
+            };
           });
         };
 
